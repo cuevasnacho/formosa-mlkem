@@ -121,8 +121,8 @@ fn __polyvec_compress(reg u64 rp, stack u16[MLKEM_VECN] a)
     (u8)[rp + j] = c;
     j += 1;
     
-    t[7] >>= 2;
-    (u8)[rp + j] = t[3];
+    t[7] >>= 3;
+    (u8)[rp + j] = t[7];
     j += 1;
   }
 }
