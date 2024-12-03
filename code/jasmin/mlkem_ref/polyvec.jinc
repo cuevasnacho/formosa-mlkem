@@ -42,9 +42,9 @@ fn __polyvec_compress(reg u64 rp, stack u16[MLKEM_VECN] a)
       t[k] = (64u)aa[(int) i];
       i += 1;
       t[k] <<= 11;
-      t[k] += 1665;
-      t[k] *= 1290167;
-      t[k] >>= 32;
+      t[k] += 1664;
+      t[k] *= 645084;
+      t[k] >>= 31;
       t[k] &= 0x7ff;
     }
 
@@ -148,9 +148,9 @@ fn __i_polyvec_compress(reg ptr u8[MLKEM_POLYVECCOMPRESSEDBYTES] rp, stack u16[M
       t[k] = (64u)aa[(int) i];
       i += 1;
       t[k] <<= 11;
-      t[k] += 1665;
-      t[k] *= 1290167;
-      t[k] >>= 32;
+      t[k] += 1664;
+      t[k] *= 645084;
+      t[k] >>= 31;
       t[k] &= 0x7ff;
     }
 
