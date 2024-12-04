@@ -202,27 +202,74 @@ fn _i_poly_compress(reg ptr u8[MLKEM_POLYCOMPRESSEDBYTES] rp, reg ptr u16[MLKEM_
 
 fn _poly_decompress(reg ptr u16[MLKEM_N] rp, reg u64 ap) -> stack u16[MLKEM_N]
 {
-  reg u8 t;
-  reg u16 d0, d1;
-  reg u64 i;
+  reg u8[8] t;
+  reg u8 c0, c1, c2;
+  reg u32 d0;
+  reg u64 i, j;
+  inline int k;
 
   i = 0;
+  j = 0;
 
-  while (i < 128) {
-    t  = (u8)[ap+i];
-    d0 = (16u)t;
-    d1 = (16u)t;
-    d0 &= 0xf;
-    d1 >>= 4;
-    d0 *= MLKEM_Q;
-    d1 *= MLKEM_Q;
-    d0 += 8;
-    d1 += 8;
-    d0 >>= 4;
-    d1 >>= 4;
-    rp[2 * i] = d0;
-    rp[2 * i + 1] = d1;
-    i += 1;
+  while (i < MLKEM_N) {
+    c0 = (u8)[ap+j];
+    t[0] = c0;
+    j += 1;
+
+    c0 >>= 5;
+    c1 = (u8)[ap+j];
+    c2 = c1;
+    c1 <<= 3;
+    c0 |= c1;
+    t[1] = c0;
+    j += 1;
+
+    c1 = c2;
+    c1 >>= 2;
+    t[2] = c1;
+
+    c1 >>= 5;
+    c0 = (u8)[ap+j];
+    c2 = c0;
+    c0 <<= 1;
+    c0 |= c1;
+    t[3] = c0;
+    j += 1;
+
+    c1 = c2;
+    c1 >>= 4;
+    c0 = (u8)[ap+j];
+    c2 = c0;
+    c0 <<= 4;
+    c0 |= c1;
+    t[4] = c0;
+    j += 1;
+
+    c1 = c2;
+    c1 >>= 1;
+    t[5] = c1;
+
+    c1 >>= 5;
+    c0 = (u8)[ap+j];
+    c2 = c0;
+    c0 <<= 2;
+    c0 |= c1;
+    t[6] = c0;
+    j += 1;
+
+    c2 >>= 3;
+    t[7] = c2;
+
+    for k = 0 to 8
+    {
+      d0 = (32u)t[k];
+      d0 &= 31;
+      d0 *= MLKEM_Q;
+      d0 += 16;
+      d0 >>= 5;
+      rp[i] = d0;
+      i += 1;
+    }
   }
   return rp;
 }
