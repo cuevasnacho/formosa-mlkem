@@ -53,13 +53,17 @@ export fn indcpa_keypair_jazz(reg u64 pkp, reg u64 skp, reg u64 randomnessp)
   skpv[MLKEM_N:MLKEM_N] = _poly_getnoise(skpv[MLKEM_N:MLKEM_N], noiseseed, nonce);
   nonce = 2;
   skpv[2*MLKEM_N:MLKEM_N] = _poly_getnoise(skpv[2*MLKEM_N:MLKEM_N], noiseseed, nonce);
-
   nonce = 3;
-  e[0:MLKEM_N] = _poly_getnoise(e[0:MLKEM_N], noiseseed, nonce);
+  skpv[3*MLKEM_N:MLKEM_N] = _poly_getnoise(skpv[3*MLKEM_N:MLKEM_N], noiseseed, nonce);
+
   nonce = 4;
-  e[MLKEM_N:MLKEM_N] = _poly_getnoise(e[MLKEM_N:MLKEM_N], noiseseed, nonce);
+  e[0:MLKEM_N] = _poly_getnoise(e[0:MLKEM_N], noiseseed, nonce);
   nonce = 5;
+  e[MLKEM_N:MLKEM_N] = _poly_getnoise(e[MLKEM_N:MLKEM_N], noiseseed, nonce);
+  nonce = 6;
   e[2*MLKEM_N:MLKEM_N] = _poly_getnoise(e[2*MLKEM_N:MLKEM_N], noiseseed, nonce);
+  nonce = 7;
+  e[3*MLKEM_N:MLKEM_N] = _poly_getnoise(e[3*MLKEM_N:MLKEM_N], noiseseed, nonce);
 
   skpv = __polyvec_ntt(skpv);
   e    = __polyvec_ntt(e);
@@ -70,6 +74,8 @@ export fn indcpa_keypair_jazz(reg u64 pkp, reg u64 skp, reg u64 randomnessp)
   pkpv[MLKEM_N:MLKEM_N] = _poly_frommont(pkpv[MLKEM_N:MLKEM_N]);
   pkpv[2*MLKEM_N:MLKEM_N] = __polyvec_pointwise_acc(a[2*MLKEM_VECN:MLKEM_VECN], skpv);
   pkpv[2*MLKEM_N:MLKEM_N] = _poly_frommont(pkpv[2*MLKEM_N:MLKEM_N]);
+  pkpv[3*MLKEM_N:MLKEM_N] = __polyvec_pointwise_acc(a[3*MLKEM_VECN:MLKEM_VECN], skpv);
+  pkpv[3*MLKEM_N:MLKEM_N] = _poly_frommont(pkpv[3*MLKEM_N:MLKEM_N]);
 
   pkpv = __polyvec_add2(pkpv, e);
   pkpv = __polyvec_reduce(pkpv);
@@ -96,11 +102,10 @@ export fn indcpa_enc_jazz(reg u64 ctp, reg u64 msgp, reg u64 pkp, reg u64 coinsp
 {
   stack u16[MLKEM_K * MLKEM_VECN] at;
   stack u16[MLKEM_VECN] pkpv sp ep bp;
-  stack u16[MLKEM_N] k poly epp v;
+  stack u16[MLKEM_N] k epp v;
   stack u8[MLKEM_SYMBYTES] publicseed;
   stack u8[MLKEM_SYMBYTES] noiseseed;
   reg u64 i j one;
-  reg u16 t;
   reg u8 c nonce;
   stack u64 sctp;
 
@@ -137,15 +142,19 @@ export fn indcpa_enc_jazz(reg u64 ctp, reg u64 msgp, reg u64 pkp, reg u64 coinsp
   sp[MLKEM_N:MLKEM_N] = _poly_getnoise(sp[MLKEM_N:MLKEM_N], noiseseed, nonce);
   nonce = 2;
   sp[2*MLKEM_N:MLKEM_N] = _poly_getnoise(sp[2*MLKEM_N:MLKEM_N], noiseseed, nonce);
-
   nonce = 3;
-  ep[0:MLKEM_N] = _poly_getnoise(ep[0:MLKEM_N], noiseseed, nonce);
-  nonce = 4;
-  ep[MLKEM_N:MLKEM_N] = _poly_getnoise(ep[MLKEM_N:MLKEM_N], noiseseed, nonce);
-  nonce = 5;
-  ep[2*MLKEM_N:MLKEM_N] = _poly_getnoise(ep[2*MLKEM_N:MLKEM_N], noiseseed, nonce);
+  sp[3*MLKEM_N:MLKEM_N] = _poly_getnoise(sp[3*MLKEM_N:MLKEM_N], noiseseed, nonce);
 
+  nonce = 4;
+  ep[0:MLKEM_N] = _poly_getnoise(ep[0:MLKEM_N], noiseseed, nonce);
+  nonce = 5;
+  ep[MLKEM_N:MLKEM_N] = _poly_getnoise(ep[MLKEM_N:MLKEM_N], noiseseed, nonce);
   nonce = 6;
+  ep[2*MLKEM_N:MLKEM_N] = _poly_getnoise(ep[2*MLKEM_N:MLKEM_N], noiseseed, nonce);
+  nonce = 7;
+  ep[3*MLKEM_N:MLKEM_N] = _poly_getnoise(ep[3*MLKEM_N:MLKEM_N], noiseseed, nonce);
+
+  nonce = 8;
   epp = _poly_getnoise(epp, noiseseed, nonce);
 
   sp = __polyvec_ntt(sp);
@@ -153,6 +162,7 @@ export fn indcpa_enc_jazz(reg u64 ctp, reg u64 msgp, reg u64 pkp, reg u64 coinsp
   bp[0:MLKEM_N] = __polyvec_pointwise_acc(at[0:MLKEM_VECN], sp);
   bp[MLKEM_N:MLKEM_N] = __polyvec_pointwise_acc(at[MLKEM_VECN:MLKEM_VECN], sp);
   bp[2*MLKEM_N:MLKEM_N] = __polyvec_pointwise_acc(at[2*MLKEM_VECN:MLKEM_VECN], sp);
+  bp[3*MLKEM_N:MLKEM_N] = __polyvec_pointwise_acc(at[3*MLKEM_VECN:MLKEM_VECN], sp);
   
   v = __polyvec_pointwise_acc(pkpv, sp);
 
