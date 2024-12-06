@@ -13,8 +13,8 @@ int main(void)
 {
   int test_ok = 1;
   size_t test_iteration = 0;
-  unsigned char out0[128];
-  unsigned char out1[128];
+  unsigned char out0[160]; // MLKEM_K = 4
+  unsigned char out1[160]; // MLKEM_K = 4
   poly a;
   
   while(test_ok == 1 && test_iteration < TEST_ITERATIONS)
@@ -24,7 +24,7 @@ int main(void)
     poly_compress(out0, &a);
     poly_compress_jazz(out1, &a);
 
-    for(int i=0;i<128;i++)
+    for(int i=0;i<160;i++)
     { if(out0[i] != out1[i])
       { fprintf(stderr, "ERROR: poly_compress: %d, %d, %d\n", i, out0[i], out1[i]);
         test_ok = 0;

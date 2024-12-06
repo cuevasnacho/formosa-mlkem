@@ -152,7 +152,7 @@ fn _poly_compress(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
 
   i = 0;
   k = 0;
-  while(i < 216)
+  while(i < MLKEM_N)
   {
     for j = 0 to 8
     {
@@ -219,30 +219,78 @@ fn _poly_compress(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
 
 fn _i_poly_compress(reg ptr u8[MLKEM_POLYCOMPRESSEDBYTES] rp, reg ptr u16[MLKEM_N] a) -> reg ptr u8[MLKEM_POLYCOMPRESSEDBYTES], reg ptr u16[MLKEM_N]
 {
-  reg u32 d0, d1;
-  reg u64 i;
+  reg u16 u v;
+  reg u32 d0;
+  reg u64 i k;
+  reg u8[8] t;
+  reg u8 c0 c1 c2;
+  inline int j;
 
   a = _poly_csubq(a);
 
   i = 0;
-  while(i < 128)
+  k = 0;
+  while(i < MLKEM_N)
   {
-    d0 = (32u) a[2 * i];
-    d1 = (32u) a[2 * i + 1];
-    d0 <<= 4;
-    d0 += 1665;
-    d0 *= 80635;
-    d0 >>= 28;
-    d0 &= 0xf;
-    d1 <<= 4;
-    d1 += 1665;
-    d1 *= 80635;
-    d1 >>= 28;
-    d1 &= 0xf;
-    d1 <<= 4;
-    d0 |= d1;
-    rp[i] = d0;
-    i += 1;
+    for j = 0 to 8
+    {
+      // map to positive standard representatives
+      u = (16u)a[i];
+      v = u;
+      v >>= 15;
+      v &= MLKEM_Q;
+      u += v;
+      d0 = (32u)u;
+      d0 <<= 5;
+      d0 += 1664;
+      d0 *= 40318;
+      d0 >>= 27;
+      d0 &= 0x1f;
+      t[j] = d0;
+      i += 1;
+    }
+    
+    c0 = t[0];
+    c1 = t[1];
+    c1 <<= 5;
+    c0 |= c1;
+    rp[k] = c0;
+
+    c0 = t[1];
+    c0 >>= 3;
+    c1 = t[2];
+    c1 <<= 2;
+    c2 = t[3];
+    c2 <<= 7;
+    c0 |= c1;
+    c0 |= c2;
+    rp[k+1] = c0;
+
+    c0 = t[3];
+    c0 >>= 1;
+    c1 = t[4];
+    c1 <<= 4;
+    c0 |= c1;
+    rp[k+2] = c0;
+
+    c0 = t[4];
+    c0 >>= 4;
+    c1 = t[5];
+    c1 <<= 1;
+    c2 = t[6];
+    c2 <<= 6;
+    c0 |= c1;
+    c0 |= c2;
+    rp[k+3] = c0;
+
+    c0 = t[6];
+    c0 >>= 2;
+    c1 = t[7];
+    c1 <<= 3;
+    c0 |= c1;
+    rp[k+4] = c0;
+
+    k += 5;
   }
   return rp, a;
 }
