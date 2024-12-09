@@ -307,18 +307,14 @@ fn _poly_decompress(reg ptr u16[MLKEM_N] rp, reg u64 ap) -> stack u16[MLKEM_N]
   reg u256 f q shufbidx mask shift;
   reg u128 t;
   reg u16 ti;
-  reg ptr u16[16] x16p x16m x16s;
-  reg ptr u8[32] x32p;
+  reg ptr u16[16] x16p;
   stack u128 sh;
 
   x16p = jqx16;
   q = x16p[u256 0];
-  x32p = pd_jshufbidx;
-  shufbidx = x32p[u256 0];
-  x16m = pd_mask_s;
-  mask = x16m[u256 0];
-  x16s = pd_shift_s;
-  shift = x16s[u256 0];
+  shufbidx = pd_jshufbidx[u256 0];
+  mask = pd_mask_s[u256 0];
+  shift = pd_shift_s[u256 0];
 
   f = #set0_256();
 
