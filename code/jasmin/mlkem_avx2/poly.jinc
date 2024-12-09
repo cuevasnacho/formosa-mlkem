@@ -294,17 +294,20 @@ fn _poly_compress_1(reg ptr u8[MLKEM_POLYCOMPRESSEDBYTES] rp, reg ptr u16[MLKEM_
   return rp, a;
 }
 
-u8[32] pd_jshufbidx = {0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,
-                       4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7};
-u32 pd_mask_s = 0x00F0000F;
-u32 pd_shift_s = 0x800800;
+u8[32] pd_jshufbidx = {0,0,0,1,1,1,1,2,2,3,3,3,3,4,4,4,
+                       5,5,5,6,6,6,6,7,7,8,8,8,8,9,9,9};
+u16[16] pd_mask_s = {31,992,124,3968,496,62,1984,248,
+                     31,992,124,3968,496,62,1984,248};
+u16[16] pd_shift_s = {1024,32,256,8,64,512,16,128,
+                      1024,32,256,8,64,512,16,128};
 
 fn _poly_decompress(reg ptr u16[MLKEM_N] rp, reg u64 ap) -> stack u16[MLKEM_N]
 {
   inline int i;
   reg u256 f q shufbidx mask shift;
-  reg u128 h;
-  reg ptr u16[16] x16p;
+  reg u128 t;
+  reg u16 ti;
+  reg ptr u16[16] x16p x16m x16s;
   reg ptr u8[32] x32p;
   stack u128 sh;
 
@@ -312,18 +315,22 @@ fn _poly_decompress(reg ptr u16[MLKEM_N] rp, reg u64 ap) -> stack u16[MLKEM_N]
   q = x16p[u256 0];
   x32p = pd_jshufbidx;
   shufbidx = x32p[u256 0];
-  mask = #VPBROADCAST_8u32(pd_mask_s);
-  shift = #VPBROADCAST_8u32(pd_shift_s);
+  x16m = pd_mask_s;
+  mask = x16m[u256 0];
+  x16s = pd_shift_s;
+  shift = x16s[u256 0];
 
   f = #set0_256();
 
   for i=0 to MLKEM_N/16
   {
-    h = (128u)(u64)[ap + 8*i];
-    sh = h;
+    t = (128u)(u64)[ap + 10*i];
+    ti = (16u)(u16)[ap + 10*i + 8];
+    t = #VPINSR_8u16(t, ti, 4);
+    sh = t;
     f = #VPBROADCAST_2u128(sh);
 
-    f = #VPSHUFB_256(f, shufbidx);
+    f = #VPSHUFB_32u8(f, shufbidx);
     f = #VPAND_256(f, mask);
     f = #VPMULL_16u16(f, shift);
     f = #VPMULHRS_16u16(f, q);
