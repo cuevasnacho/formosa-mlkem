@@ -279,14 +279,14 @@ fn _poly_compress_1(reg ptr u8[MLKEM_POLYCOMPRESSEDBYTES] rp, reg ptr u16[MLKEM_
     f0 = #VPAND_256(f0, mask);
     f1 = #VPAND_256(f1, mask);
     f0 = #VPACKUS_16u16(f0, f1);
-    f0 = #VPMADDUBSW_256(f0, shift2);
-    f0 = #VPMADDWD_256(f0, shift3);
+    f0 = #VPMADDUBSW_16u16(f0, shift2);
+    f0 = #VPMADDWD_16u16(f0, shift3);
     f0 = #VPSLLV_8u32(f0, sllvdidx);
     f0 = #VPSRLV_4u64(f0, sllvdidx);
-    f0 = #VPSHUFB_256(f0, shufbidx);
+    f0 = #VPSHUFB_32u8(f0, shufbidx);
     t0 = (128u)f0;
     t1 = #VEXTRACTI128(f0, 1);
-    t0 = #VPBLEND_8u16(t0, t1, (128u)shufbidx);
+    t0 = #VPBLENDVB_8u16(t0, t1, (128u)shufbidx);
     rp.[u128 20*i] = t0;
     rp.[u32 20*i + 16] = #VPEXTR_32(t1, 0);
   }
