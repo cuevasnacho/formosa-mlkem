@@ -847,6 +847,33 @@ fn _poly_getnoise_eta1122_4x(reg ptr u16[MLKEM_N] r0 r1 r2 r3, reg ptr u8[MLKEM_
 
 
 inline
+fn _poly_getnoise_eta2(reg ptr u16[MLKEM_N] rp, reg ptr u8[MLKEM_SYMBYTES] seed, reg u8 nonce) -> reg ptr u16[MLKEM_N]
+{
+  stack ptr u16[MLKEM_N] s_rp;
+  stack u8[MLKEM_SYMBYTES+1] extseed;
+  stack u8[MLKEM_ETA2*MLKEM_N/4] buf;
+  reg u8 c;
+  inline int k;
+
+  s_rp = rp;
+  
+  for k = 0 to MLKEM_SYMBYTES
+  {
+    c = seed[k];
+    extseed[k] = c;
+  }
+  extseed[MLKEM_SYMBYTES] = nonce;
+
+  buf = _shake256_128_33(buf, extseed);
+
+  rp = s_rp;
+  rp =__poly_cbd_eta2(rp, buf);
+
+  return rp;
+}
+
+
+inline
 fn __invntt___butterfly64x(reg u256 rl0 rl1 rl2 rl3 rh0 rh1 rh2 rh3 zl0 zl1 zh0 zh1 qx16) 
     -> reg u256, reg u256, reg u256, reg u256, reg u256, reg u256, reg u256, reg u256
 {
