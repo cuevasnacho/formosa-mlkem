@@ -52,6 +52,7 @@ void poly_tomsg_jazz(unsigned char msg[MLKEM_SYMBYTES], poly *r);
 
 void poly_getnoise_eta1_4x_jazz(poly *r,const unsigned char *seed, unsigned char nonce);
 void poly_getnoise_eta1122_4x_jazz(poly *r,const unsigned char *seed, unsigned char nonce);
+void poly_getnoise_eta2_jazz(poly *r,const unsigned char *seed, unsigned char nonce);
 
 void poly_ntt_jazz(poly *r);
 void poly_invntt_jazz(poly *r);
