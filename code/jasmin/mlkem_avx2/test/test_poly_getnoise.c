@@ -10,8 +10,10 @@
 
 int main(void)
 {
-  int test_ok = 1, test_ok_poly_getnoise_eta1_4x = 1,
-      test_ok_poly_getnoise_eta1122_4x = 1;
+  int test_ok = 1,
+      test_ok_poly_getnoise_eta1_4x = 1,
+      test_ok_poly_getnoise_eta1122_4x = 1,
+      test_ok_poly_getnoise_eta2 = 1;
   size_t test_iteration = 0;
   size_t ri;
   poly r0[4], r1[4];
@@ -56,6 +58,22 @@ int main(void)
       }
     }
 
+    for(int i=0;i<4;i++)
+    {
+      poly_getnoise_eta2(&r0[i], seed, 0);
+      poly_getnoise_eta2_jazz(&r1[i], seed, 0);
+    }
+
+    for(int i=0;i<4;i++)
+    { for(int j=0;j<MLKEM_N;j++)
+      { if(r0[i].coeffs[j] != r1[i].coeffs[j])
+        { fprintf(stderr, "ERROR: poly_getnoise_eta2 %d, %d, %d\n", i*256+j, r0[i].coeffs[j], r1[i].coeffs[j]);
+          test_ok_poly_getnoise_eta2 = 0;
+          test_ok = 0;
+        }
+      }
+    }
+
     test_iteration += 1;
   }
   fclose(urandom);
@@ -65,6 +83,9 @@ int main(void)
 
   if(test_ok_poly_getnoise_eta1122_4x == 1)
   { printf("OK: poly_getnoise_eta1122_4x\n"); }
+
+  if(test_ok_poly_getnoise_eta2 == 1)
+  { printf("OK: poly_getnoise_eta2\n"); }
 
   return 0;
 }
