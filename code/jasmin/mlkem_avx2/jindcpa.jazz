@@ -62,7 +62,8 @@ export fn indcpa_enc_jazz(reg u64 ctp, reg u64 msgp, reg u64 pkp, reg u64 coinsp
   nonce = 4;
   ep[0:MLKEM_N], ep[MLKEM_N:MLKEM_N], ep[2*MLKEM_N:MLKEM_N], ep[3*MLKEM_N:MLKEM_N] = _poly_getnoise_eta1_4x(ep[0:MLKEM_N], ep[MLKEM_N:MLKEM_N], ep[2*MLKEM_N:MLKEM_N], ep[3*MLKEM_N:MLKEM_N], noiseseed, nonce);
 
-  epp = _poly_getnoise_eta2(epp, noiseseed, 8);
+  nonce = 8;
+  epp = _poly_getnoise_eta2(epp, noiseseed, nonce);
 
   sp = __polyvec_ntt(sp);
     

@@ -847,7 +847,7 @@ fn _poly_getnoise_eta1122_4x(reg ptr u16[MLKEM_N] r0 r1 r2 r3, reg ptr u8[MLKEM_
 }
 
 
-inline
+#[returnaddress="stack"]
 fn _poly_getnoise_eta2(reg ptr u16[MLKEM_N] rp, reg ptr u8[MLKEM_SYMBYTES] seed, reg u8 nonce) -> reg ptr u16[MLKEM_N]
 {
   stack ptr u16[MLKEM_N] s_rp;
