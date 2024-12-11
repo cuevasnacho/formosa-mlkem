@@ -2,7 +2,7 @@
 #define PARAMS_H
 
 #ifndef MLKEM_K
-#define MLKEM_K 3 /* Change this for different security strengths */
+#define MLKEM_K 4 /* Change this for different security strengths */
 #endif
 
 #define MLKEM_NAMESPACE(s) s
