@@ -2,44 +2,41 @@ require "indcpa.jinc"
 require "verify.jinc"
 
 inline
-fn __crypto_kem_keypair_jazz(reg u64 pkp, reg u64 skp, reg ptr u8[MLKEM_SYMBYTES*2] randomnessp)
+fn __crypto_kem_keypair_jazz(#spill_to_mmx reg u64 pkp, #spill_to_mmx reg u64 skp, #spill_to_mmx reg ptr u8[MLKEM_SYMBYTES*2] randomnessp)
 {
-  stack ptr u8[MLKEM_SYMBYTES*2] s_randomnessp;
   reg ptr u8[MLKEM_SYMBYTES] randomnessp1 randomnessp2;
 
   stack u8[32] h_pk;
-  stack u64 s_skp s_pkp;
   reg u64 t64;
   inline int i;
 
-  s_randomnessp = randomnessp;
-  s_pkp = pkp;
-  s_skp = skp;
+  () = #spill(pkp, skp);
 
   randomnessp1 = randomnessp[0:MLKEM_SYMBYTES];
+  () = #spill(randomnessp);
   __indcpa_keypair(pkp, skp, randomnessp1);
 
-  skp = s_skp;
+  () = #unspill(skp, pkp);
   skp += MLKEM_POLYVECBYTES;
-  pkp = s_pkp;
 
   for i=0 to MLKEM_INDCPA_PUBLICKEYBYTES/8
   {
     (u64)[skp + 8 * i] = (u64)[pkp + 8 * i];
   }
 
-  s_skp += MLKEM_POLYVECBYTES + MLKEM_INDCPA_PUBLICKEYBYTES;
-  pkp = s_pkp;
+  skp += MLKEM_INDCPA_PUBLICKEYBYTES;
+  () = #spill(skp);
+  () = #unspill(pkp);
   t64 = MLKEM_PUBLICKEYBYTES;
   h_pk = _isha3_256(h_pk, pkp, t64);
-  skp = s_skp;
+  () = #unspill(skp);
 
   for i=0 to 4
   {
     (u64)[skp + 8 * i] = h_pk[u64 i];
   }
 
-  randomnessp = s_randomnessp;
+  () = #unspill(randomnessp);
   randomnessp2 = randomnessp[MLKEM_SYMBYTES:MLKEM_SYMBYTES];
   for i=0 to MLKEM_SYMBYTES/8
   {

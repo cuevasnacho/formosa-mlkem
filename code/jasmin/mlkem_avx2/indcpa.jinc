@@ -4,9 +4,8 @@ require "polyvec.jinc"
 require "gen_matrix.jinc"
 
 inline
-fn __indcpa_keypair(reg u64 pkp, reg u64 skp, reg ptr u8[MLKEM_SYMBYTES] randomnessp)
+fn __indcpa_keypair(#spill_to_mmx reg u64 pkp, #spill_to_mmx reg u64 skp, reg ptr u8[MLKEM_SYMBYTES] randomnessp)
 {
-  stack u64 spkp sskp;
   stack u16[MLKEM_K*MLKEM_VECN] aa;
   stack u16[MLKEM_VECN] e pkpv skpv;
   stack u8[64] buf;
@@ -16,8 +15,7 @@ fn __indcpa_keypair(reg u64 pkp, reg u64 skp, reg ptr u8[MLKEM_SYMBYTES] randomn
   reg u8 nonce;
   inline int i;
 
-  spkp = pkp;
-  sskp = skp;
+  () = #spill(pkp, skp);
 
   for i=0 to MLKEM_SYMBYTES/8
   {
@@ -57,8 +55,7 @@ fn __indcpa_keypair(reg u64 pkp, reg u64 skp, reg ptr u8[MLKEM_SYMBYTES] randomn
   pkpv = __polyvec_add2(pkpv, e);
   pkpv = __polyvec_reduce(pkpv);
 
-  pkp = spkp;
-  skp = sskp;
+  () = #unspill(pkp, skp);
 
   __polyvec_tobytes(skp, skpv);
   __polyvec_tobytes(pkp, pkpv);

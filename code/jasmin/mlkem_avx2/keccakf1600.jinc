@@ -142,7 +142,7 @@ inline fn keccakf1600_set_row(
   reg ptr u64[25] e,
   reg u64[5] b,
   inline int y,
-  stack u64 s_rc)
+  reg u64 rc)
   ->
   reg ptr u64[25]
 {
@@ -154,11 +154,9 @@ inline fn keccakf1600_set_row(
     x1 = (x + 1) % 5;
     x2 = (x + 2) % 5;
 
-    t  = !b[x1] & b[x2]; // bmi1
-    //t = b[x1]; t = !t; t &= b[x2];
-
+    t  = !b[x1] & b[x2];
     t ^= b[x];
-    if( x==0 && y==0 ){ t ^= s_rc; }
+    if (x==0 && y==0) { t ^= rc; }
     e[x + y*5] = t;
   }
 
@@ -174,16 +172,16 @@ inline fn keccakf1600_round(
 {
   inline int y;
   reg u64[5] b c d;
-  stack u64 s_rc;
 
-  s_rc = rc;
+  () = #spill(rc, e);
 
   c = keccakf1600_theta_sum(a);
   d = keccakf1600_theta_rol(c);
 
+  () = #unspill(rc, e);
   for y = 0 to 5
   { b = keccakf1600_rol_sum(a, d, y);
-    e = keccakf1600_set_row(e, b, y, s_rc);
+    e = keccakf1600_set_row(e, b, y, rc);
   }
 
   return e;
@@ -191,21 +189,24 @@ inline fn keccakf1600_round(
 
 inline fn __keccakf1600(reg ptr u64[25] a) -> reg ptr u64[25]
 {
-  reg ptr u64[24] RC;
+  #spill_to_mmx reg ptr u64[24] RC;
   stack u64[25] s_e;
   reg ptr u64[25] e;
 
   reg u64 c rc;
 
   RC = KECCAK1600_RC;
+  () = #spill(RC);
   e = s_e;
 
   c = 0;
   while (c < KECCAK_ROUNDS - 1)
   {
+    () = #unspill(RC);
     rc = RC[(int) c];
     e = keccakf1600_round(e, a, rc);
-
+    
+    () = #unspill(RC);
     rc = RC[(int) c + 1];
     a = keccakf1600_round(a, e, rc);
 
