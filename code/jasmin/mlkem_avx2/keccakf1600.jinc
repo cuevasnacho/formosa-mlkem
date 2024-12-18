@@ -173,14 +173,12 @@ inline fn keccakf1600_round(
   inline int y;
   reg u64[5] b c d;
 
-  () = #spill(rc, e);
-
   c = keccakf1600_theta_sum(a);
   d = keccakf1600_theta_rol(c);
 
-  () = #unspill(rc, e);
   for y = 0 to 5
-  { b = keccakf1600_rol_sum(a, d, y);
+  {
+    b = keccakf1600_rol_sum(a, d, y);
     e = keccakf1600_set_row(e, b, y, rc);
   }
 
@@ -193,24 +191,22 @@ inline fn __keccakf1600(reg ptr u64[25] a) -> reg ptr u64[25]
   stack u64[25] s_e;
   reg ptr u64[25] e;
 
-  reg u64 c rc;
+  reg u64 rc;
+  inline int c;
 
   RC = KECCAK1600_RC;
   () = #spill(RC);
   e = s_e;
 
-  c = 0;
-  while (c < KECCAK_ROUNDS - 1)
+  for c = 0 to KECCAK_ROUNDS/2
   {
     () = #unspill(RC);
-    rc = RC[(int) c];
+    rc = RC[2 * c];
     e = keccakf1600_round(e, a, rc);
     
     () = #unspill(RC);
-    rc = RC[(int) c + 1];
+    rc = RC[2 * c + 1];
     a = keccakf1600_round(a, e, rc);
-
-    c += 2;
   }
 
   return a;

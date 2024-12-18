@@ -84,10 +84,8 @@ fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed)
   reg u8 c;
   reg u16 t;
   reg u64 ctr k;
-  stack u64 sctr;
   inline int j i;
 
-  // stransposed = transposed;
   () = #spill(transposed);
 
   for j = 0 to MLKEM_SYMBYTES
@@ -100,8 +98,8 @@ fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed)
   {
     for j = 0 to MLKEM_K
     {
-      // transposed = stransposed;
       () = #unspill(transposed);
+      () = #spill(t, k);
       if(transposed == 0)
       {
         extseed[MLKEM_SYMBYTES] = j;
@@ -113,17 +111,19 @@ fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed)
         extseed[MLKEM_SYMBYTES+1] = j;
       }
 
+      () = #spill(transposed);
       state = _shake128_absorb34(state, extseed);
 
       ctr = 0;
       while (ctr < MLKEM_N)
       {
-        sctr = ctr;
+        () = #spill(ctr);
         state, buf = _shake128_squeezeblock(state, buf);
-        ctr = sctr;
+        () = #unspill(ctr);
         ctr, poly  = __rej_uniform(poly, ctr, buf);
       }
 
+      () = #unspill(t, k);
       k = 0;
       reg ptr u16[MLKEM_N] rij;
       rij = r[i * MLKEM_VECN + j * MLKEM_N : MLKEM_N];

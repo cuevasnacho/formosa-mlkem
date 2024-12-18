@@ -196,6 +196,7 @@ export fn poly_decompress_jazz(reg u64 rp ap) -> reg u64
   stack u16[MLKEM_N] r;
   reg u64 i;
 
+  ap = ap;
   () = #spill(rp);
   i=0; while(i < MLKEM_N){ r[i] = (u16)[rp + 2*i]; i += 1; }
 
