@@ -68,9 +68,7 @@ fn __crypto_kem_enc_jazz(#spill_to_mmx reg u64 ctp, #spill_to_mmx reg u64 shkp, 
   kr = _sha3_512_64(kr, buf);
 
   () = #unspill(pkp, ctp);
-
   __indcpa_enc_0(ctp, buf[0:MLKEM_INDCPA_MSGBYTES], pkp, kr[MLKEM_SYMBYTES:MLKEM_SYMBYTES]);
-
   () = #unspill(shkp);
 
   for i=0 to MLKEM_SYMBYTES/8
