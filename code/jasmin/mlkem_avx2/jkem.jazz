@@ -50,27 +50,27 @@ export fn jade_kem_mlkem_mlkem768_amd64_avx2_enc_derand(#transient reg u64 ciphe
 
 export fn jade_kem_mlkem_mlkem768_amd64_avx2_keypair(#transient reg u64 public_key secret_key) -> reg u64
 {
-  reg u64 r;
+  reg u64 r flag num_bytes;
   stack u8[MLKEM_SYMBYTES*2] randomness;
-  reg ptr u8[MLKEM_SYMBYTES*2] randomnessp;
 
   _ = #init_msf();
 
   public_key = public_key;
   secret_key = secret_key;
 
-  randomnessp = randomness;
-  randomnessp = #randombytes(randomnessp);
-  __crypto_kem_keypair_jazz(public_key, secret_key, randomnessp);
+  while {
+    flag = 0;
+    randomness, num_bytes = #randombytes(randomness, flag);
+  } (num_bytes != MLKEM_SYMBYTES*2)
+  __crypto_kem_keypair_jazz(public_key, secret_key, randomness);
   ?{}, r = #set0();
   return r;
 }
 
 export fn jade_kem_mlkem_mlkem768_amd64_avx2_enc(#transient reg u64 ciphertext shared_secret public_key) -> reg u64
 {
-  reg u64 r;
+  reg u64 r flag num_bytes;
   stack u8[MLKEM_SYMBYTES] randomness;
-  reg ptr u8[MLKEM_SYMBYTES] randomnessp;
 
   _ = #init_msf();
 
@@ -78,9 +78,11 @@ export fn jade_kem_mlkem_mlkem768_amd64_avx2_enc(#transient reg u64 ciphertext s
   shared_secret = shared_secret;
   public_key = public_key;
 
-  randomnessp = randomness;
-  randomnessp = #randombytes(randomnessp);
-  __crypto_kem_enc_jazz(ciphertext, shared_secret, public_key, randomnessp);
+  while {
+    flag = 0;
+    randomness, num_bytes = #randombytes(randomness, flag);
+  } (num_bytes != MLKEM_SYMBYTES*2)
+  __crypto_kem_enc_jazz(ciphertext, shared_secret, public_key, randomness);
   ?{}, r = #set0();
   return r;
 }
