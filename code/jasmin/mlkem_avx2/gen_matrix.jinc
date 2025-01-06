@@ -126,6 +126,7 @@ fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed)
       () = #unspill(t, k);
       k = 0;
       reg ptr u16[MLKEM_N] rij;
+      _ = #init_msf();
       rij = r[i * MLKEM_VECN + j * MLKEM_N : MLKEM_N];
       while (k < MLKEM_N)
       {
@@ -142,6 +143,7 @@ fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed)
     for j = 0 to MLKEM_K
     {
       r[i*MLKEM_VECN+j*MLKEM_N:MLKEM_N] = _nttunpack(r[i*MLKEM_VECN+j*MLKEM_N:MLKEM_N]);
+      _ = #init_msf();
     }
   }
 

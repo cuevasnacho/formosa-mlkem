@@ -191,14 +191,18 @@ fn __polyvec_frombytes(reg u64 ap) -> stack u16[MLKEM_VECN]
 {
   stack u16[MLKEM_VECN] r;
   reg u64 pp;
+  #msf reg u64 msf;
 
   pp = ap;
   r[0:MLKEM_N] = _poly_frombytes(r[0:MLKEM_N], pp);
   pp += MLKEM_POLYBYTES;
+  msf = #init_msf();
   r[MLKEM_N:MLKEM_N] = _poly_frombytes(r[MLKEM_N:MLKEM_N], pp);
   pp += MLKEM_POLYBYTES;
+  msf = #init_msf();
   r[2*MLKEM_N:MLKEM_N] = _poly_frombytes(r[2*MLKEM_N:MLKEM_N], pp);
   pp += MLKEM_POLYBYTES;
+  msf = #init_msf();
   r[3*MLKEM_N:MLKEM_N] = _poly_frombytes(r[3*MLKEM_N:MLKEM_N], pp);
 
   return r;

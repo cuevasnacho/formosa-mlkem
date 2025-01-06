@@ -1338,29 +1338,6 @@ fn _shake128_absorb4x_34(reg ptr u256[25] s, reg ptr u8[34] m0 m1 m2 m3) -> reg 
 }
 
 
-inline
-fn __shake128_squeezeblock4x(reg ptr u256[25] state, reg ptr u8[SHAKE128_RATE] h0 h1 h2 h3) -> reg ptr u256[25], reg ptr u8[SHAKE128_RATE], reg ptr u8[SHAKE128_RATE], reg ptr u8[SHAKE128_RATE], reg ptr u8[SHAKE128_RATE]
-{
-  reg u256 t256;
-  reg u128 t128;
-  inline int i;
-
-  state = _KeccakF1600_StatePermute4x(state);
-
-	for i = 0 to (SHAKE128_RATE / 8) {
-    t256 = state[i];
-    t128 = (128u)t256;
-		h0[u64 i] = #VMOVLPD(t128);
-		h1[u64 i] = #VMOVHPD(t128);
-    t128 = #VEXTRACTI128(t256, 1);
-		h2[u64 i] = #VMOVLPD(t128);
-		h3[u64 i] = #VMOVHPD(t128);
-	}
-
-  return state, h0, h1, h2, h3;
-}
-
-
 fn _shake256_absorb4x_33(reg ptr u256[25] s, reg ptr u8[33] m0 m1 m2 m3) -> reg ptr u256[25]
 {
 	inline int i;
@@ -1417,9 +1394,10 @@ fn __shake256_squeezeblock4x(reg ptr u256[25] state, reg ptr u8[SHAKE256_RATE] h
   reg u256 t256;
   reg u128 t128;
   inline int i;
-
+  
   state = _KeccakF1600_StatePermute4x(state);
-
+  _ = #init_msf();
+  
 	for i = 0 to (SHAKE256_RATE / 8) {
     t256 = state[i];
     t128 = (128u)t256;

@@ -212,8 +212,10 @@ fn _poly_compress(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
   reg u256 f0 f1 v mask shift1 shift2 shift3 sllvdidx shufbidx;
   reg ptr u16[16] x16p;
   reg u128 t0 t1;
+  #msf reg u64 msf;
 
   a = _poly_csubq(a);
+  msf = #init_msf();
 
   x16p = jvx16;
   v = x16p[u256 0];
@@ -257,8 +259,10 @@ fn _poly_compress_1(reg ptr u8[MLKEM_POLYCOMPRESSEDBYTES] rp, reg ptr u16[MLKEM_
   reg u256 f0 f1 v mask shift1 shift2 shift3 sllvdidx shufbidx;
   reg ptr u16[16] x16p;
   reg u128 t0 t1;
+  #msf reg u64 msf;
 
   a = _poly_csubq(a);
+  msf = #init_msf();
 
   x16p = jvx16;
   v = x16p[u256 0];
@@ -806,42 +810,11 @@ fn _poly_getnoise_eta1_4x(reg ptr u16[MLKEM_N] r0 r1 r2 r3, reg ptr u8[MLKEM_SYM
   state = _shake256_absorb4x_33(state, buf0[0:33], buf1[0:33], buf2[0:33], buf3[0:33]);
   state, buf0, buf1, buf2, buf3 = __shake256_squeezenblocks4x(state, buf0, buf1, buf2, buf3);
 
+  _ = #init_msf();
   r0 = __poly_cbd_eta1(r0, buf0[0:MLKEM_ETA1*MLKEM_N/4+(MLKEM_ETA1 - 2)*8]);
   r1 = __poly_cbd_eta1(r1, buf1[0:MLKEM_ETA1*MLKEM_N/4+(MLKEM_ETA1 - 2)*8]);
   r2 = __poly_cbd_eta1(r2, buf2[0:MLKEM_ETA1*MLKEM_N/4+(MLKEM_ETA1 - 2)*8]);
   r3 = __poly_cbd_eta1(r3, buf3[0:MLKEM_ETA1*MLKEM_N/4+(MLKEM_ETA1 - 2)*8]);
-
-  return r0, r1, r2, r3;
-}
-
-#[returnaddress="stack"]
-fn _poly_getnoise_eta1122_4x(reg ptr u16[MLKEM_N] r0 r1 r2 r3, reg ptr u8[MLKEM_SYMBYTES] seed, reg u8 nonce) -> reg ptr u16[MLKEM_N], reg ptr u16[MLKEM_N], reg ptr u16[MLKEM_N], reg ptr u16[MLKEM_N]
-{
-  reg u256 f;
-  stack u256[25] state;
-  stack u8[NOISE_NBLOCKS * SHAKE256_RATE] buf0 buf1 buf2 buf3;
-
-  f = seed[u256 0];
-  buf0[u256 0] = f;
-  buf1[u256 0] = f;
-  buf2[u256 0] = f;
-  buf3[u256 0] = f;
-
-  buf0.[32] = nonce;
-  nonce += 1;
-  buf1.[32] = nonce;
-  nonce += 1;
-  buf2.[32] = nonce;
-  nonce += 1;
-  buf3.[32] = nonce;
-
-  state = _shake256_absorb4x_33(state, buf0[0:33], buf1[0:33], buf2[0:33], buf3[0:33]);
-  state, buf0, buf1, buf2, buf3 = __shake256_squeezenblocks4x(state, buf0, buf1, buf2, buf3);
-
-  r0 = __poly_cbd_eta1(r0, buf0[0:MLKEM_ETA1*MLKEM_N/4+(MLKEM_ETA1 - 2)*8]);
-  r1 = __poly_cbd_eta1(r1, buf1[0:MLKEM_ETA1*MLKEM_N/4+(MLKEM_ETA1 - 2)*8]);
-  r2 = __poly_cbd_eta2(r2, buf2[0:MLKEM_ETA2*MLKEM_N/4]);
-  r3 = __poly_cbd_eta2(r3, buf3[0:MLKEM_ETA2*MLKEM_N/4]);
 
   return r0, r1, r2, r3;
 }
@@ -854,6 +827,7 @@ fn _poly_getnoise_eta2(#spill_to_mmx reg ptr u16[MLKEM_N] rp, reg ptr u8[MLKEM_S
   stack u8[MLKEM_ETA2*MLKEM_N/4] buf;
   reg u8 c;
   inline int k;
+  #msf reg u64 msf;
 
   () = #spill(rp);
   
@@ -865,6 +839,7 @@ fn _poly_getnoise_eta2(#spill_to_mmx reg ptr u16[MLKEM_N] rp, reg ptr u8[MLKEM_S
   extseed[MLKEM_SYMBYTES] = nonce;
 
   buf = _shake256_128_33(buf, extseed);
+  msf = #init_msf();
 
   () = #unspill(rp);
   rp =__poly_cbd_eta2(rp, buf);
@@ -1307,11 +1282,13 @@ fn _poly_tobytes(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
   inline int i;
   reg u256 t0 t1 t2 t3 t4 t5 t6 t7 qx16 tt ttt;
   reg ptr u16[16] jqx16_p;
+  #msf reg u64 msf;
 
   jqx16_p = jqx16;
   qx16 = jqx16_p[u256 0];
 
   a = _poly_csubq(a);
+  msf = #init_msf();
 
   for i = 0 to 2
   {
@@ -1379,8 +1356,10 @@ fn _poly_tomsg(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
   reg u256 f0 f1 g0 g1 hq hhq;
   reg ptr u16[16] px16;
   reg u32 c;
+  #msf reg u64 msf;
 
   a = _poly_csubq(a);
+  msf = #init_msf();
 
   px16 = hqx16_m1;
   hq = px16[u256 0];
@@ -1414,8 +1393,10 @@ fn _poly_tomsg_1(reg ptr u8[MLKEM_INDCPA_MSGBYTES] rp, reg ptr u16[MLKEM_N] a) -
   reg u256 f0 f1 g0 g1 hq hhq;
   reg ptr u16[16] px16;
   reg u32 c;
+  #msf reg u64 msf;
 
   a = _poly_csubq(a);
+  msf = #init_msf();
 
   px16 = hqx16_m1;
   hq = px16[u256 0];
