@@ -143,21 +143,19 @@ fn _poly_compress(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
 {
   reg u16 u v;
   reg u32 d0;
-  reg u64 i k;
   reg u8[8] t;
   reg u8 c0 c1 c2;
-  inline int j;
+  inline int i j;
 
   a = _poly_csubq(a);
+  _ = #init_msf();
 
-  i = 0;
-  k = 0;
-  while(i < MLKEM_N)
+  for i=0 to MLKEM_N/8
   {
     for j = 0 to 8
     {
       // map to positive standard representatives
-      u = (16u)a[i];
+      u = (16u)a[i*8 + j];
       v = u;
       v >>= 15;
       v &= MLKEM_Q;
@@ -169,14 +167,13 @@ fn _poly_compress(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
       d0 >>= 27;
       d0 &= 0x1f;
       t[j] = d0;
-      i += 1;
     }
     
     c0 = t[0];
     c1 = t[1];
     c1 <<= 5;
     c0 |= c1;
-    (u8)[rp+k] = c0;
+    (u8)[rp+i*5] = c0;
 
     c0 = t[1];
     c0 >>= 3;
@@ -186,14 +183,14 @@ fn _poly_compress(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
     c2 <<= 7;
     c0 |= c1;
     c0 |= c2;
-    (u8)[rp+k+1] = c0;
+    (u8)[rp+i*5+1] = c0;
 
     c0 = t[3];
     c0 >>= 1;
     c1 = t[4];
     c1 <<= 4;
     c0 |= c1;
-    (u8)[rp+k+2] = c0;
+    (u8)[rp+i*5+2] = c0;
 
     c0 = t[4];
     c0 >>= 4;
@@ -203,16 +200,14 @@ fn _poly_compress(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
     c2 <<= 6;
     c0 |= c1;
     c0 |= c2;
-    (u8)[rp+k+3] = c0;
+    (u8)[rp+i*5+3] = c0;
 
     c0 = t[6];
     c0 >>= 2;
     c1 = t[7];
     c1 <<= 3;
     c0 |= c1;
-    (u8)[rp+k+4] = c0;
-
-    k += 5;
+    (u8)[rp+i*5+4] = c0;
   }
   return a;
 }
@@ -227,6 +222,7 @@ fn _i_poly_compress(reg ptr u8[MLKEM_POLYCOMPRESSEDBYTES] rp, reg ptr u16[MLKEM_
   inline int j;
 
   a = _poly_csubq(a);
+  _ = #init_msf();
 
   i = 0;
   k = 0;
@@ -541,7 +537,7 @@ fn _i_poly_frommsg(reg ptr u16[MLKEM_N] rp, reg ptr u8[32] ap) -> stack u16[MLKE
   return rp;
 }
 
-fn _poly_getnoise(reg ptr u16[MLKEM_N] rp, reg ptr u8[MLKEM_SYMBYTES] seed, reg u8 nonce) -> reg ptr u16[MLKEM_N]
+fn _poly_getnoise(#spill_to_mmx reg ptr u16[MLKEM_N] rp, reg ptr u8[MLKEM_SYMBYTES] seed, reg u8 nonce) -> reg ptr u16[MLKEM_N]
 {
   stack u8[33] extseed;   /* 33 = MLKEM_SYMBYTES +1 */
   stack u8[128] buf;      /* 128 = MLKEM_ETA*MLKEM_N/4 */
@@ -549,11 +545,9 @@ fn _poly_getnoise(reg ptr u16[MLKEM_N] rp, reg ptr u8[MLKEM_SYMBYTES] seed, reg 
   reg u16 t;
   reg u64 i;
   inline int k;
-
-  stack ptr u16[MLKEM_N] srp;
-
-  srp = rp;
   
+  () = #spill(rp);
+
   for k = 0 to MLKEM_SYMBYTES
   {
     c = seed[k];
@@ -562,9 +556,9 @@ fn _poly_getnoise(reg ptr u16[MLKEM_N] rp, reg ptr u8[MLKEM_SYMBYTES] seed, reg 
   extseed[MLKEM_SYMBYTES] = nonce;
 
   buf = _shake256_128_33(buf, extseed);
+  _ = #init_msf();
 
-  rp = srp;
-
+  () = #unspill(rp);
   i = 0;
   while (i < 128) {
     c = buf[i];
@@ -732,6 +726,7 @@ fn _poly_tobytes(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
   reg u64 i j;
 
   a = _poly_csubq(a);
+  _ = #init_msf();
 
   i = 0;
   j = 0;
@@ -766,7 +761,8 @@ fn _poly_tomsg(reg u64 rp, reg ptr u16[MLKEM_N] a) -> reg ptr u16[MLKEM_N]
   reg u32 d;
   inline int i j;
 
-  a = _poly_csubq(a); 
+  a = _poly_csubq(a);
+  _ = #init_msf();
 
   for i = 0 to 32
   {
@@ -796,7 +792,8 @@ fn _i_poly_tomsg(reg ptr u8[MLKEM_N/8] rp, reg ptr u16[MLKEM_N] a) -> reg ptr u8
   reg u32 d;
   inline int i j;
 
-  a = _poly_csubq(a); 
+  a = _poly_csubq(a);
+  _ = #init_msf();
 
   for i = 0 to 32
   {
