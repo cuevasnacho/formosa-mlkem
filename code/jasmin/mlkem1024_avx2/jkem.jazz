@@ -60,7 +60,7 @@ export fn jade_kem_mlkem_mlkem1024_amd64_avx2_keypair(#transient reg u64 public_
 
   while {
     flag = 0;
-    randomness, num_bytes = #randombytes(randomness, flag);
+    #declassify randomness, num_bytes = #randombytes(randomness, flag);
   } (num_bytes != MLKEM_SYMBYTES*2)
   __crypto_kem_keypair_jazz(public_key, secret_key, randomness);
   ?{}, r = #set0();
@@ -80,7 +80,7 @@ export fn jade_kem_mlkem_mlkem1024_amd64_avx2_enc(#transient reg u64 ciphertext 
 
   while {
     flag = 0;
-    randomness, num_bytes = #randombytes(randomness, flag);
+    #declassify randomness, num_bytes = #randombytes(randomness, flag);
   } (num_bytes != MLKEM_SYMBYTES*2)
   __crypto_kem_enc_jazz(ciphertext, shared_secret, public_key, randomness);
   ?{}, r = #set0();
