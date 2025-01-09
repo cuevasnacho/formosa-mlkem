@@ -30,6 +30,9 @@ export fn indcpa_enc_jazz(reg u64 ctp, reg u64 msgp, reg u64 pkp, reg u64 coinsp
   reg u8 c nonce;
   stack u64 sctp;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   sctp = ctp;
 
   i = 0;
@@ -40,7 +43,7 @@ export fn indcpa_enc_jazz(reg u64 ctp, reg u64 msgp, reg u64 pkp, reg u64 coinsp
     i += 1;
   }
 
-  pkpv = __polyvec_frombytes(pkp);
+  pkpv, msf = __polyvec_frombytes(pkp, msf);
 
   i = 0;
   pkp += MLKEM_POLYVECBYTES;
@@ -54,7 +57,7 @@ export fn indcpa_enc_jazz(reg u64 ctp, reg u64 msgp, reg u64 pkp, reg u64 coinsp
 
   k = _poly_frommsg(k, msgp);
 
-  aat = __gen_matrix(publicseed, 1);
+  aat, msf = __gen_matrix(publicseed, 1, msf);
 
   nonce = 0;
   sp[0:MLKEM_N], sp[MLKEM_N:MLKEM_N], sp[2*MLKEM_N:MLKEM_N], sp[3*MLKEM_N:MLKEM_N] = _poly_getnoise_eta1_4x(sp[0:MLKEM_N], sp[MLKEM_N:MLKEM_N], sp[2*MLKEM_N:MLKEM_N], sp[3*MLKEM_N:MLKEM_N], noiseseed, nonce);
@@ -65,28 +68,28 @@ export fn indcpa_enc_jazz(reg u64 ctp, reg u64 msgp, reg u64 pkp, reg u64 coinsp
   nonce = 8;
   epp = _poly_getnoise_eta2(epp, noiseseed, nonce);
 
-  sp = __polyvec_ntt(sp);
+  sp, msf = __polyvec_ntt(sp, msf);
     
-  bp[0:MLKEM_N] = __polyvec_pointwise_acc(bp[0:MLKEM_N], aat[0:MLKEM_VECN], sp);
-  bp[MLKEM_N:MLKEM_N]= __polyvec_pointwise_acc(bp[MLKEM_N:MLKEM_N], aat[MLKEM_VECN:MLKEM_VECN], sp);
-  bp[2*MLKEM_N:MLKEM_N] = __polyvec_pointwise_acc(bp[2*MLKEM_N:MLKEM_N], aat[2*MLKEM_VECN:MLKEM_VECN], sp);
-  bp[3*MLKEM_N:MLKEM_N] = __polyvec_pointwise_acc(bp[3*MLKEM_N:MLKEM_N], aat[3*MLKEM_VECN:MLKEM_VECN], sp);
+  bp[0:MLKEM_N], msf = __polyvec_pointwise_acc(bp[0:MLKEM_N], aat[0:MLKEM_VECN], sp, msf);
+  bp[MLKEM_N:MLKEM_N], msf = __polyvec_pointwise_acc(bp[MLKEM_N:MLKEM_N], aat[MLKEM_VECN:MLKEM_VECN], sp, msf);
+  bp[2*MLKEM_N:MLKEM_N], msf = __polyvec_pointwise_acc(bp[2*MLKEM_N:MLKEM_N], aat[2*MLKEM_VECN:MLKEM_VECN], sp, msf);
+  bp[3*MLKEM_N:MLKEM_N], msf = __polyvec_pointwise_acc(bp[3*MLKEM_N:MLKEM_N], aat[3*MLKEM_VECN:MLKEM_VECN], sp, msf);
   
-  v = __polyvec_pointwise_acc(v, pkpv, sp);
+  v, msf = __polyvec_pointwise_acc(v, pkpv, sp, msf);
 
-  bp = __polyvec_invntt(bp);
-  v = _poly_invntt(v);
+  bp, msf = __polyvec_invntt(bp, msf);
+  v, msf = _poly_invntt(v, msf);
 
-  bp = __polyvec_add2(bp, ep);
-  v = _poly_add2(v, epp);
-  v = _poly_add2(v, k);
+  bp, msf = __polyvec_add2(bp, ep, msf);
+  v, msf = _poly_add2(v, epp, msf);
+  v, msf = _poly_add2(v, k, msf);
   bp = __polyvec_reduce(bp);
   v  = __poly_reduce(v);
 
   ctp = sctp;
-  __polyvec_compress(ctp, bp);
-  ctp += MLKEM_POLYVECCOMPRESSEDBYTES;
-  v = _poly_compress(ctp, v);
+  msf = __polyvec_compress(ctp, bp, msf);
+  ctp = #LEA(ctp + MLKEM_POLYVECCOMPRESSEDBYTES);
+  v, msf = _poly_compress(ctp, v, msf);
 }
 
 

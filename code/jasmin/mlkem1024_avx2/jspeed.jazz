@@ -20,12 +20,15 @@ export fn gen_matrix_jazz(reg u64 ap seedp) -> reg u64
   stack u8[MLKEM_SYMBYTES] seed;
   reg u64 i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   aps = ap;
   i=0; while(i < MLKEM_SYMBYTES){ seed[i] = (u8)[seedp + i]; i += 1; }
 
   start = tsc();
 
-  a = __gen_matrix(seed, 1);
+  a, msf = __gen_matrix(seed, 1, msf);
 
   end = tsc();
 
@@ -77,12 +80,15 @@ export fn poly_ntt_jazz(reg u64 rp) -> reg u64
   stack u16[MLKEM_N] r;
   reg u64 i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   () = #spill(rp);
   i=0; while(i < MLKEM_N){ r[i] = (u16)[rp + 2*i]; i += 1; }
 
   start = tsc();
 
-  r = _poly_ntt(r);
+  r, msf = _poly_ntt(r, msf);
 
   end = tsc();
 
@@ -101,12 +107,15 @@ export fn poly_invntt_jazz(reg u64 rp) -> reg u64
   stack u16[MLKEM_N] r;
   reg u64 i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   () = #spill(rp);
   i=0; while(i < MLKEM_N){ r[i] = (u16)[rp + 2*i]; i += 1; }
 
   start = tsc();
 
-  r = _poly_invntt(r);
+  r, msf = _poly_invntt(r, msf);
 
   end = tsc();
 
@@ -125,12 +134,15 @@ export fn poly_tomsg_jazz(reg u64 rp ap) -> reg u64
   stack u16[MLKEM_N] a;
   reg u64 i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   () = #spill(ap);
   i=0; while(i < MLKEM_N){ a[i] = (u16)[ap + 2*i]; i += 1; }
 
   start = tsc();
 
-  a = _poly_tomsg(rp, a);
+  a, msf = _poly_tomsg(rp, a, msf);
 
   end = tsc();
 
@@ -173,12 +185,15 @@ export fn poly_compress_jazz(reg u64 rp ap) -> reg u64
   stack u16[MLKEM_N] a;
   reg u64 i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   () = #spill(ap);
   i=0; while(i < MLKEM_N){ a[i] = (u16)[ap + 2*i]; i += 1; }
 
   start = tsc();
 
-  a = _poly_compress(rp, a);
+  a, msf = _poly_compress(rp, a, msf);
 
   end = tsc();
 
@@ -225,13 +240,16 @@ export fn polyvec_pointwise_acc_jazz(reg u64 rp ap bp) -> reg u64
   stack u16[MLKEM_N] r;
   reg u64 i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   () = #spill(rp);
   i=0; while(i < MLKEM_VECN){ a[i] = (u16)[ap + 2*i]; i += 1; }
   i=0; while(i < MLKEM_VECN){ b[i] = (u16)[bp + 2*i]; i += 1; }
 
   start = tsc();
 
-  r = __polyvec_pointwise_acc(r, a, b);
+  r, msf = __polyvec_pointwise_acc(r, a, b, msf);
 
   end = tsc();
 
@@ -249,11 +267,14 @@ export fn polyvec_compress_jazz(reg u64 rp ap) -> reg u64
   stack u16[MLKEM_VECN] a;
   reg u64 i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   i=0; while(i < MLKEM_VECN){ a[i] = (u16)[ap + 2*i]; i += 1; }
 
   start = tsc();
 
-  __polyvec_compress(rp, a);
+  msf = __polyvec_compress(rp, a, msf);
 
   end = tsc();
 

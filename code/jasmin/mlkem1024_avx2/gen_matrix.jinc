@@ -73,7 +73,7 @@ fn __rej_uniform(stack u16[MLKEM_N] rp, reg u64 offset, stack u8[SHAKE128_RATE] 
 }
 
 inline
-fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed) -> stack u16[MLKEM_K*MLKEM_VECN]
+fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed, #msf reg u64 msf) -> stack u16[MLKEM_K*MLKEM_VECN], #msf reg u64
 {
   stack u8[34] extseed;
   stack u8[SHAKE128_RATE] buf;
@@ -126,7 +126,7 @@ fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed)
       () = #unspill(t, k);
       k = 0;
       reg ptr u16[MLKEM_N] rij;
-      _ = #init_msf();
+      msf = #init_msf();
       rij = r[i * MLKEM_VECN + j * MLKEM_N : MLKEM_N];
       while (k < MLKEM_N)
       {
@@ -138,14 +138,14 @@ fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed)
     }
   }
 
+  msf = #init_msf();
   for i = 0 to MLKEM_K
   {
     for j = 0 to MLKEM_K
     {
-      r[i*MLKEM_VECN+j*MLKEM_N:MLKEM_N] = _nttunpack(r[i*MLKEM_VECN+j*MLKEM_N:MLKEM_N]);
-      _ = #init_msf();
+      #update_after_call r[i*MLKEM_VECN+j*MLKEM_N:MLKEM_N], msf = _nttunpack(r[i*MLKEM_VECN+j*MLKEM_N:MLKEM_N], msf);
     }
   }
 
-  return r;
+  return r, msf;
 }

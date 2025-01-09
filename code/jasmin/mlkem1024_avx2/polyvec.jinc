@@ -3,25 +3,25 @@ require "poly.jinc"
 require "shuffle.jinc"
 
 inline
-fn __polyvec_add2(stack u16[MLKEM_VECN] r, stack u16[MLKEM_VECN] b) -> stack u16[MLKEM_VECN]
+fn __polyvec_add2(stack u16[MLKEM_VECN] r, stack u16[MLKEM_VECN] b, #msf reg u64 msf) -> stack u16[MLKEM_VECN], #msf reg u64
 {
-  r[0:MLKEM_N]         = _poly_add2(r[0:MLKEM_N], b[0:MLKEM_N]);
-  r[MLKEM_N:MLKEM_N]   = _poly_add2(r[MLKEM_N:MLKEM_N], b[MLKEM_N:MLKEM_N]);
-  r[2*MLKEM_N:MLKEM_N] = _poly_add2(r[2*MLKEM_N:MLKEM_N], b[2*MLKEM_N:MLKEM_N]);
-  r[3*MLKEM_N:MLKEM_N] = _poly_add2(r[3*MLKEM_N:MLKEM_N], b[3*MLKEM_N:MLKEM_N]);
+  #update_after_call r[0:MLKEM_N], msf         = _poly_add2(r[0:MLKEM_N], b[0:MLKEM_N], msf);
+  #update_after_call r[MLKEM_N:MLKEM_N], msf   = _poly_add2(r[MLKEM_N:MLKEM_N], b[MLKEM_N:MLKEM_N], msf);
+  #update_after_call r[2*MLKEM_N:MLKEM_N], msf = _poly_add2(r[2*MLKEM_N:MLKEM_N], b[2*MLKEM_N:MLKEM_N], msf);
+  #update_after_call r[3*MLKEM_N:MLKEM_N], msf = _poly_add2(r[3*MLKEM_N:MLKEM_N], b[3*MLKEM_N:MLKEM_N], msf);
 
-  return r;
+  return r, msf;
 }
 
 inline
-fn __polyvec_csubq(stack u16[MLKEM_VECN] r) -> stack u16[MLKEM_VECN]
+fn __polyvec_csubq(stack u16[MLKEM_VECN] r, #msf reg u64 msf) -> stack u16[MLKEM_VECN], #msf reg u64
 {
-  r[0:MLKEM_N] = _poly_csubq(r[0:MLKEM_N]);
-  r[MLKEM_N:MLKEM_N] = _poly_csubq(r[MLKEM_N:MLKEM_N]);
-  r[2*MLKEM_N:MLKEM_N] = _poly_csubq(r[2*MLKEM_N:MLKEM_N]);
-  r[3*MLKEM_N:MLKEM_N] = _poly_csubq(r[3*MLKEM_N:MLKEM_N]);
+  #update_after_call r[0:MLKEM_N], msf = _poly_csubq(r[0:MLKEM_N], msf);
+  #update_after_call r[MLKEM_N:MLKEM_N], msf = _poly_csubq(r[MLKEM_N:MLKEM_N], msf);
+  #update_after_call r[2*MLKEM_N:MLKEM_N], msf = _poly_csubq(r[2*MLKEM_N:MLKEM_N], msf);
+  #update_after_call r[3*MLKEM_N:MLKEM_N], msf = _poly_csubq(r[3*MLKEM_N:MLKEM_N], msf);
 
-  return r;
+  return r, msf;
 }
 
 u8[32] pvd_shufbidx_s = {0, 1, 1, 2, 2, 3, 4, 5,
@@ -87,14 +87,14 @@ u8[32] pvc_shufbidx_s = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,-1,-1,-1,-1,-1,
                          5, 6, 7, 8, 9,10,-1,-1,-1,-1, 0, 0, 1, 2, 3, 4};
 
 inline
-fn __polyvec_compress(reg u64 rp, stack u16[MLKEM_VECN] a)
+fn __polyvec_compress(reg u64 rp, stack u16[MLKEM_VECN] a, #msf reg u64 msf) -> #msf reg u64
 {
   inline int i;
   reg u256 f0 f1 f2 v v8 off shift1 mask shift2 sllvdidx srlvqidx shufbidx;
   reg u128 t0 t1;
   reg ptr u16[16] x16p;
 
-  a = __polyvec_csubq(a);
+  a, msf = __polyvec_csubq(a, msf);
 
   x16p = jvx16;
   v = x16p[u256 0];
@@ -133,17 +133,18 @@ fn __polyvec_compress(reg u64 rp, stack u16[MLKEM_VECN] a)
     (u128)[rp + 22*i] = t0;
     (u64)[rp + 22*i + 16] = (64u)t1;
   }
+  return msf;
 }
 
 inline
-fn __polyvec_compress_1(reg ptr u8[MLKEM_POLYVECCOMPRESSEDBYTES] rp, stack u16[MLKEM_VECN] a) -> reg ptr u8[MLKEM_POLYVECCOMPRESSEDBYTES]
+fn __polyvec_compress_1(reg ptr u8[MLKEM_POLYVECCOMPRESSEDBYTES] rp, stack u16[MLKEM_VECN] a, #msf reg u64 msf) -> reg ptr u8[MLKEM_POLYVECCOMPRESSEDBYTES], #msf reg u64
 {
   inline int i;
   reg u256 f0 f1 f2 v v8 off shift1 mask shift2 sllvdidx srlvqidx shufbidx;
   reg u128 t0 t1;
   reg ptr u16[16] x16p;
 
-  a = __polyvec_csubq(a);
+  a, msf = __polyvec_csubq(a, msf);
 
   x16p = jvx16;
   v = x16p[u256 0];
@@ -183,53 +184,51 @@ fn __polyvec_compress_1(reg ptr u8[MLKEM_POLYVECCOMPRESSEDBYTES] rp, stack u16[M
     rp.[u64 22*i + 16] = (64u)t1;
   }
 
-  return rp;
+  return rp, msf;
 }
 
 inline
-fn __polyvec_frombytes(reg u64 ap) -> stack u16[MLKEM_VECN]
+fn __polyvec_frombytes(reg u64 ap, #msf reg u64 msf) -> stack u16[MLKEM_VECN], #msf reg u64
 {
   stack u16[MLKEM_VECN] r;
-  reg u64 pp;
-  #msf reg u64 msf;
+  ap = ap;
 
-  pp = ap;
-  r[0:MLKEM_N] = _poly_frombytes(r[0:MLKEM_N], pp);
-  pp += MLKEM_POLYBYTES;
-  msf = #init_msf();
-  r[MLKEM_N:MLKEM_N] = _poly_frombytes(r[MLKEM_N:MLKEM_N], pp);
-  pp += MLKEM_POLYBYTES;
-  msf = #init_msf();
-  r[2*MLKEM_N:MLKEM_N] = _poly_frombytes(r[2*MLKEM_N:MLKEM_N], pp);
-  pp += MLKEM_POLYBYTES;
-  msf = #init_msf();
-  r[3*MLKEM_N:MLKEM_N] = _poly_frombytes(r[3*MLKEM_N:MLKEM_N], pp);
+  #update_after_call r[0:MLKEM_N], msf = _poly_frombytes(r[0:MLKEM_N], ap, msf);
+  ap = #protect(ap, msf);
+  ap = #LEA(ap + MLKEM_POLYBYTES);
+  #update_after_call r[MLKEM_N:MLKEM_N], msf = _poly_frombytes(r[MLKEM_N:MLKEM_N], ap, msf);
+  ap = #protect(ap, msf);
+  ap = #LEA(ap + MLKEM_POLYBYTES);
+  #update_after_call r[2*MLKEM_N:MLKEM_N], msf = _poly_frombytes(r[2*MLKEM_N:MLKEM_N], ap, msf);
+  ap = #protect(ap, msf);
+  ap = #LEA(ap + MLKEM_POLYBYTES);
+  #update_after_call r[3*MLKEM_N:MLKEM_N], msf = _poly_frombytes(r[3*MLKEM_N:MLKEM_N], ap, msf);
 
-  return r;
+  return r, msf;
 }
 
 
 inline
-fn __polyvec_invntt(stack u16[MLKEM_VECN] r) -> stack u16[MLKEM_VECN]
+fn __polyvec_invntt(stack u16[MLKEM_VECN] r, #msf reg u64 msf) -> stack u16[MLKEM_VECN], #msf reg u64
 {
-  r[0:MLKEM_N] = _poly_invntt(r[0:MLKEM_N]);
-  r[MLKEM_N:MLKEM_N] = _poly_invntt(r[MLKEM_N:MLKEM_N]);
-  r[2*MLKEM_N:MLKEM_N] = _poly_invntt(r[2*MLKEM_N:MLKEM_N]);
-  r[3*MLKEM_N:MLKEM_N] = _poly_invntt(r[3*MLKEM_N:MLKEM_N]);
+  #update_after_call r[0:MLKEM_N], msf = _poly_invntt(r[0:MLKEM_N], msf);
+  #update_after_call r[MLKEM_N:MLKEM_N], msf = _poly_invntt(r[MLKEM_N:MLKEM_N], msf);
+  #update_after_call r[2*MLKEM_N:MLKEM_N], msf = _poly_invntt(r[2*MLKEM_N:MLKEM_N], msf);
+  #update_after_call r[3*MLKEM_N:MLKEM_N], msf = _poly_invntt(r[3*MLKEM_N:MLKEM_N], msf);
 
-  return r;
+  return r, msf;
 }
 
 
 inline
-fn __polyvec_ntt(stack u16[MLKEM_VECN] r) -> stack u16[MLKEM_VECN]
+fn __polyvec_ntt(stack u16[MLKEM_VECN] r, #msf reg u64 msf) -> stack u16[MLKEM_VECN], #msf reg u64
 {
-  r[0:MLKEM_N] = _poly_ntt(r[0:MLKEM_N]);
-  r[MLKEM_N:MLKEM_N] = _poly_ntt(r[MLKEM_N:MLKEM_N]);
-  r[2*MLKEM_N:MLKEM_N] = _poly_ntt(r[2*MLKEM_N:MLKEM_N]);
-  r[3*MLKEM_N:MLKEM_N] = _poly_ntt(r[3*MLKEM_N:MLKEM_N]);
+  #update_after_call r[0:MLKEM_N], msf = _poly_ntt(r[0:MLKEM_N], msf);
+  #update_after_call r[MLKEM_N:MLKEM_N], msf = _poly_ntt(r[MLKEM_N:MLKEM_N], msf);
+  #update_after_call r[2*MLKEM_N:MLKEM_N], msf = _poly_ntt(r[2*MLKEM_N:MLKEM_N], msf);
+  #update_after_call r[3*MLKEM_N:MLKEM_N], msf = _poly_ntt(r[3*MLKEM_N:MLKEM_N], msf);
 
-  return r;
+  return r, msf;
 }
 
 
@@ -246,33 +245,33 @@ fn __polyvec_reduce(stack u16[MLKEM_VECN] r) -> stack u16[MLKEM_VECN]
 
 
 inline
-fn __polyvec_pointwise_acc(stack u16[MLKEM_N] r, stack u16[MLKEM_VECN] a b) -> stack u16[MLKEM_N]
+fn __polyvec_pointwise_acc(stack u16[MLKEM_N] r, stack u16[MLKEM_VECN] a b, #msf reg u64 msf) -> stack u16[MLKEM_N], #msf reg u64
 {
   stack u16[MLKEM_N] t;
 
-  r = _poly_basemul(r, a[0:MLKEM_N], b[0:MLKEM_N]);
-  t = _poly_basemul(t, a[MLKEM_N:MLKEM_N], b[MLKEM_N:MLKEM_N]);
-  r = _poly_add2(r, t);
-  t = _poly_basemul(t, a[2*MLKEM_N:MLKEM_N], b[2*MLKEM_N:MLKEM_N]);
-  r = _poly_add2(r, t);
-  t = _poly_basemul(t, a[3*MLKEM_N:MLKEM_N], b[3*MLKEM_N:MLKEM_N]);
-  r = _poly_add2(r, t);
+  #update_after_call r, msf = _poly_basemul(r, a[0:MLKEM_N], b[0:MLKEM_N], msf);
+  #update_after_call t, msf = _poly_basemul(t, a[MLKEM_N:MLKEM_N], b[MLKEM_N:MLKEM_N], msf);
+  #update_after_call r, msf = _poly_add2(r, t, msf);
+  #update_after_call t, msf = _poly_basemul(t, a[2*MLKEM_N:MLKEM_N], b[2*MLKEM_N:MLKEM_N], msf);
+  #update_after_call r, msf = _poly_add2(r, t, msf);
+  #update_after_call t, msf = _poly_basemul(t, a[3*MLKEM_N:MLKEM_N], b[3*MLKEM_N:MLKEM_N], msf);
+  #update_after_call r, msf = _poly_add2(r, t, msf);
   
-  return r;
+  return r, msf;
 }
 
 
 inline
-fn __polyvec_tobytes(reg u64 rp, stack u16[MLKEM_VECN] a)
+fn __polyvec_tobytes(reg u64 rp, stack u16[MLKEM_VECN] a, #msf reg u64 msf) -> #msf reg u64
 {
-  reg u64 pp;
+  rp = rp;
+  #update_after_call a[0:MLKEM_N], msf = _poly_tobytes(rp, a[0:MLKEM_N], msf);
+  rp = #LEA(rp + MLKEM_POLYBYTES);
+  #update_after_call a[MLKEM_N:MLKEM_N], msf = _poly_tobytes(rp, a[MLKEM_N:MLKEM_N], msf);
+  rp = #LEA(rp + MLKEM_POLYBYTES);
+  #update_after_call a[2*MLKEM_N:MLKEM_N], msf = _poly_tobytes(rp, a[2*MLKEM_N:MLKEM_N], msf);
+  rp = #LEA(rp + MLKEM_POLYBYTES);
+  #update_after_call a[3*MLKEM_N:MLKEM_N], msf = _poly_tobytes(rp, a[3*MLKEM_N:MLKEM_N], msf);
 
-  pp = rp;
-  a[0:MLKEM_N] = _poly_tobytes(pp, a[0:MLKEM_N]);
-  pp += MLKEM_POLYBYTES;
-  a[MLKEM_N:MLKEM_N] = _poly_tobytes(pp, a[MLKEM_N:MLKEM_N]);
-  pp += MLKEM_POLYBYTES;
-  a[2*MLKEM_N:MLKEM_N] = _poly_tobytes(pp, a[2*MLKEM_N:MLKEM_N]);
-  pp += MLKEM_POLYBYTES;
-  a[3*MLKEM_N:MLKEM_N] = _poly_tobytes(pp, a[3*MLKEM_N:MLKEM_N]);
+  return msf;
 }

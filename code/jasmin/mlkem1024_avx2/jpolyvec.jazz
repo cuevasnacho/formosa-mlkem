@@ -9,17 +9,20 @@ export fn polyvec_tobytes_jazz(reg u64 rp, reg u64 ap)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_VECN {
     t = (u16)[ap + 2*i];
     a[i] = t;
   }
 
-  a[0:MLKEM_N] = _nttunpack(a[0:MLKEM_N]);
-  a[MLKEM_N:MLKEM_N] = _nttunpack(a[MLKEM_N:MLKEM_N]);
-  a[2*MLKEM_N:MLKEM_N] = _nttunpack(a[2*MLKEM_N:MLKEM_N]);
-  a[3*MLKEM_N:MLKEM_N] = _nttunpack(a[3*MLKEM_N:MLKEM_N]);
+  a[0:MLKEM_N], msf = _nttunpack(a[0:MLKEM_N], msf);
+  a[MLKEM_N:MLKEM_N], msf = _nttunpack(a[MLKEM_N:MLKEM_N], msf);
+  a[2*MLKEM_N:MLKEM_N], msf = _nttunpack(a[2*MLKEM_N:MLKEM_N], msf);
+  a[3*MLKEM_N:MLKEM_N], msf = _nttunpack(a[3*MLKEM_N:MLKEM_N], msf);
 
-  __polyvec_tobytes(rp, a);
+  msf = __polyvec_tobytes(rp, a, msf);
 }
 
 
@@ -44,12 +47,15 @@ export fn polyvec_compress_jazz(reg u64 rp, reg u64 ap)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_VECN {
     t = (u16)[ap + 2*i];
     a[i] = t;
   }
 
-  __polyvec_compress(rp, a);
+  msf = __polyvec_compress(rp, a, msf);
 }
 
 
@@ -59,7 +65,10 @@ export fn polyvec_frombytes_jazz(reg u64 rp, reg u64 ap)
   reg u16 t;
   inline int i;
 
-  r = __polyvec_frombytes(ap);
+  #msf reg u64 msf;
+  msf = #init_msf();
+
+  r, msf = __polyvec_frombytes(ap, msf);
 
   r[0:MLKEM_N] = _nttpack(r[0:MLKEM_N]);
   r[MLKEM_N:MLKEM_N] = _nttpack(r[MLKEM_N:MLKEM_N]);
@@ -80,6 +89,9 @@ export fn polyvec_add2_jazz(reg u64 rp, reg u64 bp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_VECN {
     t = (u16)[rp + 2*i];
     a[i] = t;
@@ -87,7 +99,7 @@ export fn polyvec_add2_jazz(reg u64 rp, reg u64 bp)
     b[i] = t;
   }
 
-  r = __polyvec_add2(a, b);
+  r, msf = __polyvec_add2(a, b, msf);
 
   for i = 0 to MLKEM_VECN {
     t = r[i];
@@ -103,6 +115,9 @@ export fn polyvec_pointwise_acc_jazz(reg u64 rp, reg u64 ap, reg u64 bp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_VECN {
     t = (u16)[ap + 2*i];
     a[i] = t;
@@ -110,17 +125,17 @@ export fn polyvec_pointwise_acc_jazz(reg u64 rp, reg u64 ap, reg u64 bp)
     b[i] = t;
   }
 
-  a[0:MLKEM_N] = _nttunpack(a[0:MLKEM_N]);
-  a[MLKEM_N:MLKEM_N] = _nttunpack(a[MLKEM_N:MLKEM_N]);
-  a[2*MLKEM_N:MLKEM_N] = _nttunpack(a[2*MLKEM_N:MLKEM_N]);
-  a[3*MLKEM_N:MLKEM_N] = _nttunpack(a[3*MLKEM_N:MLKEM_N]);
+  a[0:MLKEM_N], msf = _nttunpack(a[0:MLKEM_N], msf);
+  a[MLKEM_N:MLKEM_N], msf = _nttunpack(a[MLKEM_N:MLKEM_N], msf);
+  a[2*MLKEM_N:MLKEM_N], msf = _nttunpack(a[2*MLKEM_N:MLKEM_N], msf);
+  a[3*MLKEM_N:MLKEM_N], msf = _nttunpack(a[3*MLKEM_N:MLKEM_N], msf);
 
-  b[0:MLKEM_N] = _nttunpack(b[0:MLKEM_N]);
-  b[MLKEM_N:MLKEM_N] = _nttunpack(b[MLKEM_N:MLKEM_N]);
-  b[2*MLKEM_N:MLKEM_N] = _nttunpack(b[2*MLKEM_N:MLKEM_N]);
-  b[3*MLKEM_N:MLKEM_N] = _nttunpack(b[3*MLKEM_N:MLKEM_N]);
+  b[0:MLKEM_N], msf = _nttunpack(b[0:MLKEM_N], msf);
+  b[MLKEM_N:MLKEM_N], msf = _nttunpack(b[MLKEM_N:MLKEM_N], msf);
+  b[2*MLKEM_N:MLKEM_N], msf = _nttunpack(b[2*MLKEM_N:MLKEM_N], msf);
+  b[3*MLKEM_N:MLKEM_N], msf = _nttunpack(b[3*MLKEM_N:MLKEM_N], msf);
 
-  r = __polyvec_pointwise_acc(r, a, b);
+  r, msf = __polyvec_pointwise_acc(r, a, b, msf);
 
   r = _nttpack(r);
 
@@ -136,12 +151,15 @@ export fn polyvec_ntt_jazz(reg u64 rp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_VECN {
     t = (u16)[rp + 2*i];
     r[i] = t;
   }
 
-  r = __polyvec_ntt(r);
+  r, msf = __polyvec_ntt(r, msf);
 
   r[0:MLKEM_N] = _nttpack(r[0:MLKEM_N]);
   r[MLKEM_N:MLKEM_N] = _nttpack(r[MLKEM_N:MLKEM_N]);
@@ -160,17 +178,20 @@ export fn polyvec_invntt_jazz(reg u64 rp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_VECN {
     t = (u16)[rp + 2*i];
     r[i] = t;
   }
 
-  r[0:MLKEM_N] = _nttunpack(r[0:MLKEM_N]);
-  r[MLKEM_N:MLKEM_N] = _nttunpack(r[MLKEM_N:MLKEM_N]);
-  r[2*MLKEM_N:MLKEM_N] = _nttunpack(r[2*MLKEM_N:MLKEM_N]);
-  r[3*MLKEM_N:MLKEM_N] = _nttunpack(r[3*MLKEM_N:MLKEM_N]);
+  r[0:MLKEM_N], msf = _nttunpack(r[0:MLKEM_N], msf);
+  r[MLKEM_N:MLKEM_N], msf = _nttunpack(r[MLKEM_N:MLKEM_N], msf);
+  r[2*MLKEM_N:MLKEM_N], msf = _nttunpack(r[2*MLKEM_N:MLKEM_N], msf);
+  r[3*MLKEM_N:MLKEM_N], msf = _nttunpack(r[3*MLKEM_N:MLKEM_N], msf);
 
-  r = __polyvec_invntt(r);
+  r, msf = __polyvec_invntt(r, msf);
 
   for i = 0 to MLKEM_VECN {
     t = r[i];
@@ -184,12 +205,15 @@ export fn polyvec_csubq_jazz(reg u64 rp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_VECN {
     t = (u16)[rp + 2*i];
     r[i] = t;
   }
 
-  r = __polyvec_csubq(r);
+  r, msf = __polyvec_csubq(r, msf);
 
   for i = 0 to MLKEM_VECN {
     t = r[i];

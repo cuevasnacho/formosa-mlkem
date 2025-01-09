@@ -9,12 +9,15 @@ export fn poly_compress_jazz(reg u64 rp, reg u64 ap)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_N {
     t = (u16)[ap + 2*i];
     a[i] = t;
   }
 
-  a = _poly_compress(rp, a);
+  a, msf = _poly_compress(rp, a, msf);
 }
 
 export fn poly_decompress_jazz(reg u64 rp, reg u64 ap) 
@@ -37,13 +40,16 @@ export fn poly_tobytes_jazz(reg u64 rp, reg u64 ap)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_N {
     t = (u16)[ap + 2*i];
     a[i] = t;
   }
   
-  a = _nttunpack(a);
-  a = _poly_tobytes(rp, a);
+  a, msf = _nttunpack(a, msf);
+  a, msf = _poly_tobytes(rp, a, msf);
 }
 
 export fn poly_frombytes_jazz(reg u64 rp, reg u64 ap) 
@@ -52,7 +58,10 @@ export fn poly_frombytes_jazz(reg u64 rp, reg u64 ap)
   reg u16 t;
   inline int i;
 
-  r = _poly_frombytes(r, ap);
+  #msf reg u64 msf;
+  msf = #init_msf();
+
+  r, msf = _poly_frombytes(r, ap, msf);
 
   r = _nttpack(r);
 
@@ -68,12 +77,15 @@ export fn poly_tomsg_jazz(reg u64 rp, reg u64 ap)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_N {
     t = (u16)[ap + 2*i];
     a[i] = t;
   }
 
-  a = _poly_tomsg(rp, a);
+  a, msf = _poly_tomsg(rp, a, msf);
 }
 
 export fn poly_frommsg_jazz(reg u64 rp, reg u64 ap) 
@@ -98,6 +110,9 @@ export fn poly_add2_jazz(reg u64 rp,  reg u64 bp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_N {
     t = (u16)[rp + 2*i];
     r[i] = t;
@@ -105,7 +120,7 @@ export fn poly_add2_jazz(reg u64 rp,  reg u64 bp)
     b[i] = t;
   }
 
-  r = _poly_add2(r, b);
+  r, msf = _poly_add2(r, b, msf);
 
   for i = 0 to MLKEM_N {
     t = r[i];
@@ -121,6 +136,9 @@ export fn poly_sub_jazz(reg u64 rp, reg u64 ap, reg u64 bp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_N {
     t = (u16)[ap + 2*i];
     a[i] = t;
@@ -128,7 +146,7 @@ export fn poly_sub_jazz(reg u64 rp, reg u64 ap, reg u64 bp)
     b[i] = t;
   }
 
-  r = _poly_sub(r, a, b);
+  r, msf = _poly_sub(r, a, b, msf);
 
   for i = 0 to MLKEM_N {
     t = r[i];
@@ -142,12 +160,15 @@ export fn poly_ntt_jazz(reg u64 rp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_N {
     t = (u16)[rp + 2*i];
     r[i] = t;
   }
 
-  r = _poly_ntt(r);
+  r, msf = _poly_ntt(r, msf);
 
   r = _nttpack(r);
 
@@ -163,14 +184,17 @@ export fn poly_invntt_jazz(reg u64 rp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_N {
     t = (u16)[rp + 2*i];
     r[i] = t;
   }
   
-  r = _nttunpack(r);
+  r, msf = _nttunpack(r, msf);
 
-  r = _poly_invntt(r);
+  r, msf = _poly_invntt(r, msf);
 
   for i = 0 to MLKEM_N {
     t = r[i];
@@ -186,6 +210,9 @@ export fn poly_basemul_jazz(reg u64 rp, reg u64 ap, reg u64 bp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_N {
     t = (u16)[ap + 2*i];
     a[i] = t;
@@ -195,9 +222,9 @@ export fn poly_basemul_jazz(reg u64 rp, reg u64 ap, reg u64 bp)
     r[i] = t;
   }
 
-  a = _nttunpack(a);
-  b = _nttunpack(b);
-  r = _poly_basemul(r, a, b);
+  a, msf = _nttunpack(a, msf);
+  b, msf = _nttunpack(b, msf);
+  r, msf = _poly_basemul(r, a, b, msf);
   r = _nttpack(r);
 
   for i = 0 to MLKEM_N {
@@ -212,12 +239,15 @@ export fn poly_frommont_jazz(reg u64 rp)
   reg u16 t;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   for i = 0 to MLKEM_N {
     t = (u16)[rp + 2*i];
     r[i] = t;
   }
 
-  r = _poly_frommont(r);
+  r, msf = _poly_frommont(r, msf);
 
   for i = 0 to MLKEM_N {
     t = r[i];
@@ -302,13 +332,15 @@ export fn poly_csubq_jazz(reg u64 rp)
   stack u16[MLKEM_N] r;
   reg u16 t;
   inline int i;
+  #msf reg u64 msf;
+  msf = #init_msf();
 
   for i = 0 to MLKEM_N {
     t = (u16)[rp + 2*i];
     r[i] = t;
   }
 
-  r = _poly_csubq(r);
+  r, msf = _poly_csubq(r, msf);
 
   for i = 0 to MLKEM_N {
     t = r[i];
