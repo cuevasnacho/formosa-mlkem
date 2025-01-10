@@ -35,14 +35,14 @@ fn __rej_uniform(stack u16[MLKEM_N] rp, reg u64 offset, stack u8[SHAKE128_RATE] 
       t   = (16u)buf[pos + 2];
       t <<= 4;
       val2 |= t;
-      pos += 3;
+      pos = #LEA(pos + 3);
 
       val1 = #protect_16(val1, msf);
       if_cond = val1 < MLKEM_Q;
       if if_cond {
         msf = #update_msf(if_cond, msf);
         rp[ctr] = val1;
-        ctr += 1;
+        ctr = #LEA(ctr + 1);
       } else {
         msf = #update_msf(!if_cond, msf);
       }
@@ -56,7 +56,7 @@ fn __rej_uniform(stack u16[MLKEM_N] rp, reg u64 offset, stack u8[SHAKE128_RATE] 
         {
           msf = #update_msf(if_cond, msf);
           rp[ctr] = val2;
-          ctr += 1;
+          ctr = #LEA(ctr + 1);
         } else {
           msf = #update_msf(!if_cond, msf);
         }
@@ -84,6 +84,7 @@ fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed,
   reg u8 c;
   reg u16 t;
   reg u64 ctr k;
+  reg bool cond;
   inline int j i;
 
   () = #spill(transposed);
@@ -128,22 +129,23 @@ fn __gen_matrix(stack u8[MLKEM_SYMBYTES] seed, #spill_to_mmx reg u64 transposed,
       reg ptr u16[MLKEM_N] rij;
       msf = #init_msf();
       rij = r[i * MLKEM_VECN + j * MLKEM_N : MLKEM_N];
-      while (k < MLKEM_N)
-      {
+      while { cond = k < MLKEM_N; } (cond) {
+        msf = #update_msf(cond, msf);
         t = poly[(int) k];
         rij[k] = t;
-        k += 1;
+        k = #LEA(k + 1);
       }
+      msf = #update_msf(!cond, msf);
       r[i * MLKEM_VECN + j * MLKEM_N : MLKEM_N] = rij;
     }
   }
 
-  msf = #init_msf();
   for i = 0 to MLKEM_K
   {
     for j = 0 to MLKEM_K
     {
       #update_after_call r[i*MLKEM_VECN+j*MLKEM_N:MLKEM_N], msf = _nttunpack(r[i*MLKEM_VECN+j*MLKEM_N:MLKEM_N], msf);
+      msf = #init_msf();
     }
   }
 

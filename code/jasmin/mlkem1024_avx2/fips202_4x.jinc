@@ -1250,7 +1250,7 @@ reg u256 Ca, reg u256 Ce, reg u256 Ci, reg u256 Co, reg u256 Cu)
     return A_4x, E_4x;
 }
 
-fn _KeccakF1600_StatePermute4x(reg ptr u256[25] A_4x) -> reg ptr u256[25]
+fn _KeccakF1600_StatePermute4x(reg ptr u256[25] A_4x, #msf reg u64 msf) -> reg ptr u256[25], #msf reg u64
 {
     reg u256 Ca, Ce, Ci, Co, Cu;
 
@@ -1284,7 +1284,7 @@ fn _KeccakF1600_StatePermute4x(reg ptr u256[25] A_4x) -> reg ptr u256[25]
     E_4x, A_4x = __theta_rho_pi_chi_iota(E_4x, A_4x, 23, Ca, Ce, Ci, Co, Cu);
 
 
-    return A_4x;
+    return A_4x, msf;
 }
 
 
@@ -1338,7 +1338,7 @@ fn _shake128_absorb4x_34(reg ptr u256[25] s, reg ptr u8[34] m0 m1 m2 m3) -> reg 
 }
 
 
-fn _shake256_absorb4x_33(reg ptr u256[25] s, reg ptr u8[33] m0 m1 m2 m3) -> reg ptr u256[25]
+fn _shake256_absorb4x_33(reg ptr u256[25] s, reg ptr u8[33] m0 m1 m2 m3, #msf reg u64 msf) -> reg ptr u256[25], #msf reg u64
 {
 	inline int i;
   reg u256 t0 t1;
@@ -1384,19 +1384,22 @@ fn _shake256_absorb4x_33(reg ptr u256[25] s, reg ptr u8[33] m0 m1 m2 m3) -> reg 
   t0 = t0 ^ t1;
   s[SHAKE256_RATE / 8 - 1] = t0;
 
-	return s;
+	return s, msf;
 }
 
 
 inline
-fn __shake256_squeezeblock4x(reg ptr u256[25] state, reg ptr u8[SHAKE256_RATE] h0 h1 h2 h3) -> reg ptr u256[25], reg ptr u8[SHAKE256_RATE], reg ptr u8[SHAKE256_RATE], reg ptr u8[SHAKE256_RATE], reg ptr u8[SHAKE256_RATE]
+fn __shake256_squeezeblock4x(reg ptr u256[25] state, reg ptr u8[SHAKE256_RATE] h0 h1 h2 h3, #msf reg u64 msf) -> reg ptr u256[25], reg ptr u8[SHAKE256_RATE], reg ptr u8[SHAKE256_RATE], reg ptr u8[SHAKE256_RATE], reg ptr u8[SHAKE256_RATE], #msf reg u64
 {
   reg u256 t256;
   reg u128 t128;
   inline int i;
   
-  state = _KeccakF1600_StatePermute4x(state);
-  _ = #init_msf();
+  #update_after_call state, msf = _KeccakF1600_StatePermute4x(state, msf);
+  h0 = #protect_ptr(h0, msf);
+  h1 = #protect_ptr(h1, msf);
+  h2 = #protect_ptr(h2, msf);
+  h3 = #protect_ptr(h3, msf);
   
 	for i = 0 to (SHAKE256_RATE / 8) {
     t256 = state[i];
@@ -1408,5 +1411,5 @@ fn __shake256_squeezeblock4x(reg ptr u256[25] state, reg ptr u8[SHAKE256_RATE] h
 		h3[u64 i] = #VMOVHPD(t128);
 	}
 
-  return state, h0, h1, h2, h3;
+  return state, h0, h1, h2, h3, msf;
 }

@@ -103,7 +103,7 @@ fn __xtr_full_block(
     i = i + 1;
   }
 
-  out += rate;
+  out = #LEA(out + rate);
   outlen -= rate;
 
   return out, outlen;

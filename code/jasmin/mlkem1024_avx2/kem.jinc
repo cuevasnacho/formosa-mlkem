@@ -17,14 +17,14 @@ fn __crypto_kem_keypair_jazz(#spill_to_mmx reg u64 pkp, #spill_to_mmx reg u64 sk
   __indcpa_keypair(pkp, skp, randomnessp1);
 
   () = #unspill(skp, pkp);
-  skp += MLKEM_POLYVECBYTES;
+  skp = #LEA(skp + MLKEM_POLYVECBYTES);
 
   for i=0 to MLKEM_INDCPA_PUBLICKEYBYTES/8
   {
     (u64)[skp + 8 * i] = (u64)[pkp + 8 * i];
   }
 
-  skp += MLKEM_INDCPA_PUBLICKEYBYTES;
+  skp = #LEA(skp + MLKEM_INDCPA_PUBLICKEYBYTES);
   () = #spill(skp);
   () = #unspill(pkp);
   t64 = MLKEM_PUBLICKEYBYTES;
@@ -89,6 +89,8 @@ fn __crypto_kem_dec_jazz(#spill_to_mmx reg u64 shkp, #spill_to_mmx reg u64 ctp, 
   reg u64 pkp hp zp t64 cnd;
   inline int i;
 
+  #msf reg u64 msf;
+
   buf[0:MLKEM_INDCPA_MSGBYTES] = __indcpa_dec_1(buf[0:MLKEM_INDCPA_MSGBYTES], ctp, skp);
 
   () = #spill(ctp, shkp);
@@ -103,21 +105,22 @@ fn __crypto_kem_dec_jazz(#spill_to_mmx reg u64 shkp, #spill_to_mmx reg u64 ctp, 
   }
 
   kr = _sha3_512_64(kr, buf);
-  _ = #init_msf();
-
+  
+  msf = #init_msf();
   pkp = skp;
   pkp += 12 * MLKEM_K * MLKEM_N>>3;
 
-  ctpc = __indcpa_enc_1(ctpc, buf[0:MLKEM_INDCPA_MSGBYTES], pkp, kr[MLKEM_SYMBYTES:MLKEM_SYMBYTES]);
-  _ = #init_msf();
-
+  #update_after_call ctpc, msf = __indcpa_enc_1(ctpc, buf[0:MLKEM_INDCPA_MSGBYTES], pkp, kr[MLKEM_SYMBYTES:MLKEM_SYMBYTES], msf);
   () = #unspill(ctp);
+  ctp = #protect(ctp, msf);
+  
   cnd = __verify(ctp, ctpc);
   () = #spill(cnd);
   
   zp = skp;
-  zp += 64;
+  zp = #LEA(zp + 64);
   zp += 24 * MLKEM_K * MLKEM_N>>3;
+  zp = #protect(zp, msf);
   
   () = #spill(skp);
   h_pk = _shake256_1120_32(h_pk, zp, ctp);

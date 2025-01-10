@@ -265,6 +265,9 @@ export fn poly_getnoise_eta1_4x_jazz(reg u64 rp, reg u64 seedp, reg u8 nonce)
   reg u8 d;
   inline int i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   srp = rp;
 
   for i = 0 to MLKEM_SYMBYTES {
@@ -272,7 +275,7 @@ export fn poly_getnoise_eta1_4x_jazz(reg u64 rp, reg u64 seedp, reg u8 nonce)
     seed[i] = d;
   }
 
-  r[0:MLKEM_N], r[MLKEM_N:MLKEM_N], r[2*MLKEM_N:MLKEM_N], r[3*MLKEM_N:MLKEM_N] = _poly_getnoise_eta1_4x(r[0:MLKEM_N], r[MLKEM_N:MLKEM_N], r[2*MLKEM_N:MLKEM_N], r[3*MLKEM_N:MLKEM_N], seed, nonce);
+  r[0:MLKEM_N], r[MLKEM_N:MLKEM_N], r[2*MLKEM_N:MLKEM_N], r[3*MLKEM_N:MLKEM_N], msf = _poly_getnoise_eta1_4x(r[0:MLKEM_N], r[MLKEM_N:MLKEM_N], r[2*MLKEM_N:MLKEM_N], r[3*MLKEM_N:MLKEM_N], seed, nonce, msf);
 
   rp = srp;
   for i = 0 to 4*MLKEM_N {

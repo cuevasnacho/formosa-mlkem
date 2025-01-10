@@ -49,12 +49,15 @@ export fn poly_getnoise_4x_jazz(reg u64 r0p r1p r2p r3p, reg u64 seedp, reg u8 n
   stack u8[MLKEM_SYMBYTES] seed;
   reg u64 i;
 
+  #msf reg u64 msf;
+  msf = #init_msf();
+
   () = #spill(r0p, r1p, r2p, r3p);
   i=0; while(i < MLKEM_SYMBYTES){ seed[i] = (u8)[seedp + i]; i += 1; }
 
   start = tsc();
   
-  r0, r1, r2, r3 = _poly_getnoise_eta1_4x(r0, r1, r2, r3, seed, nonce);
+  r0, r1, r2, r3, msf = _poly_getnoise_eta1_4x(r0, r1, r2, r3, seed, nonce, msf);
 
   end = tsc();
 
